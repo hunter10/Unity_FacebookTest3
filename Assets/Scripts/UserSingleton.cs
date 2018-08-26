@@ -122,8 +122,6 @@ public class UserSingleton : MonoBehaviour {
 					 // 페이스북 로그인 결과를 JSON 파싱합니다.
 					 var aToken = Facebook.Unity.AccessToken.CurrentAccessToken; 
                      Debug.Log(aToken.UserId);
-					
-					 //bool is_logged_in = obj["is_logged_in"].Boolean;
 
                      // 페이스북 기본 정보들을 UserSingleton에 저장합니다.
                      UserSingleton.Instance.FacebookID = aToken.UserId;
@@ -143,93 +141,64 @@ public class UserSingleton : MonoBehaviour {
 		 });
 	 }
 
-	 public void LoadFacebookMe(Action<bool, string> callback, int retryCount=0)
-	 {
-		 //FB.API("/me", HttpMethod.GET, delegate(FBResult result){
 
-		 //});
-	 }
-
-	protected void HandleResult(IResult result)
-	{
-		Debug.Log("HandleResult : " + result.ToString());
-		/* 
-		if (result == null)
-		{
-			this.LastResponse = "Null Response\n";
-			LogView.AddLog(this.LastResponse);
-			return;
-		}
-
-		this.LastResponseTexture = null;
-
-		// Some platforms return the empty string instead of null.
-		if (!string.IsNullOrEmpty(result.Error))
-		{
-			this.Status = "Error - Check log for details";
-			this.LastResponse = "Error Response:\n" + result.Error;
-		}
-		else if (result.Cancelled)
-		{
-			this.Status = "Cancelled - Check log for details";
-			this.LastResponse = "Cancelled Response:\n" + result.RawResult;
-		}
-		else if (!string.IsNullOrEmpty(result.RawResult))
-		{
-			this.Status = "Success - Check log for details";
-			this.LastResponse = "Success Response:\n" + result.RawResult;
-		}
-		else
-		{
-			this.LastResponse = "Empty Response\n";
-		}
-
-		LogView.AddLog(result.ToString());
-		*/
-	}
-	
-/* 
-	private void CallFBLoginForPublish()
-	{
-		// It is generally good behavior to split asking for read and publish
-		// permissions rather than ask for them all at once.
-		//
-		// In your own game, consider postponing this call until the moment
-		// you actually need it.
-		FB.LogInWithPublishPermissions(new List<string>() { "publish_actions" }, this.HandleResult);
-	}
-	*/
-
-	/* 
-	public void LoginFacebook()
+    public void LoadFacebookMe(Action<bool, string> callback, int retryCount=0)
     {
-        FB.Init(delegate() {
-            FB.LogInWithReadPermissions(
-                new List<string>() { "public_profile", "email", "user_friends" }, 
-                delegate(ILoginResult result) {
-                    Debug.Log(result.RawResult);
-                    string user_id = result.ResultDictionary["user_id"].ToString();
-                    string photo_url = "http://graph.facebook.com/" + user_id + "/picture?type=square";
-                    Debug.Log(user_id);
-                    Debug.Log(photo_url);
+        //FB.API("/me", HttpMethod.GET, this.HandleResult);
+        FB.API("/me", HttpMethod.GET, delegate(IGraphResult result) {
 
-                    FB.API("/me", HttpMethod.GET, delegate (IGraphResult meResult)
-                    {
-                        Debug.Log(meResult.RawResult);
-                        string facebook_Name = meResult.ResultDictionary["name"].ToString();
-                        Debug.Log("Facebook name : " + facebook_Name);
-                    });
+            if (result.Error != null && retryCount >= 3){
+                Debug.LogError(result.Error);
+                callback(false, result.Error);
+                return;
+            }
 
-                    FB.API("/me/friends", HttpMethod.GET, delegate (IGraphResult friendResult)
-                    {
-                        Debug.Log(friendResult.RawResult);
-                        FriendResult res = JsonUtility.FromJson<FriendResult>(friendResult.RawResult);
-                        Debug.Log(res.summary.total_count);
-                        
-                    });
-                });
-        	});
-    	}
-	}
-	*/
+            if(result.Error != null){
+                Debug.LogError("Error occured. start retrying. " + result.Error);
+                retryCount = retryCount + 1;
+                LoadFacebookMe(callback, retryCount);
+                return;
+            }
+
+            Debug.Log(result.RawResult);
+            JSONObject meObj = JSONObject.Parse(result.RawResult);
+            UserSingleton.Instance.Name = meObj["name"].Str;
+            callback(true, result.RawResult);
+        });
+    }
+
+	public void LoadFacebookFriend(Action<bool, string> callback, int retryCount = 0)
+    {
+        FB.API("/me/friends", HttpMethod.GET, delegate (IGraphResult result) {
+
+            if (result.Error != null && retryCount >= 3)
+            {
+                Debug.LogError(result.Error);
+                callback(false, result.Error);
+                return;
+            }
+
+            if (result.Error != null)
+            {
+                Debug.LogError("Error occured. start retrying. " + result.Error);
+                retryCount = retryCount + 1;
+                LoadFacebookFriend(callback, retryCount);
+                return;
+            }
+
+            Debug.Log(result.RawResult);
+            JSONObject reponseObj = JSONObject.Parse(result.RawResult);
+            JSONArray array = reponseObj["data"].Array;
+            UserSingleton.Instance.FriendList = array;
+            callback(true, result.RawResult);
+        });
+    }
+
+    public void Refresh(Action callback)
+    {
+        //HTTPClient.Instance.GET()
+
+        callback();
+    }
+	
 }

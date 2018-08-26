@@ -63,9 +63,15 @@ public class LogInController : MonoBehaviour {
 
 	 public IEnumerator LoadDataFromFacebook()
 	 {
-		 while(!finished[0] || !finished[1]){
-			 yield return new WaitForSeconds(0.1f);
-		 }
+        UserSingleton.Instance.LoadFacebookMe(delegate (bool isSuccess, string response) {
+            finished[0] = true;
+        });
+
+
+        while (!finished[0] || !finished[1])
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
 	 }
 
 	 private void OnInitComplete()
