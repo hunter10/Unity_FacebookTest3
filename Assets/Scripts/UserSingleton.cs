@@ -75,7 +75,7 @@ public class UserSingleton : MonoBehaviour {
 	// 유저의 레벨, 경험치, 체력, 방어력, 스피드, 데미지 레벨, 체력 레벨, 방어력 레벨, 스피드 레벨입니다.
 	// 다음 레벨까지 남은 경험치, 그리고 다음 레벨로 레벨업하기 위해 필요한 경험치 정보도 가지고 있습니다.
 	public int
-		level, Experience, Damage, Health, Defence, Speed,
+		Level, Experience, Damage, Health, Defence, Speed,
 		DamageLevel, HealthLevel, DefenceLevel, SpeedLevel, 
 		Diamond, ExpAfterLastLevel, ExpForNextLevel;
 
@@ -99,7 +99,6 @@ public class UserSingleton : MonoBehaviour {
 	 private void CallFBLogin(Action<bool, string> callback, int retryCount=0)
 	 {
 		//FB.LogInWithReadPermissions(new List<string>() { "public_profile", "user_friends" }, this.HandleResult);
-		  
 		 FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, delegate (ILoginResult result){
 			
 			if(result.Error != null && retryCount >= 3){
@@ -196,8 +195,28 @@ public class UserSingleton : MonoBehaviour {
 
     public void Refresh(Action callback)
     {
-        //HTTPClient.Instance.GET()
-
+        HTTPClient.Instance.GET(Singleton.Instance.HOST + "/User/Info?UserID=" + UserSingleton.Instance.UserID,
+                                delegate (WWW www)
+                                {
+                                    Debug.Log(www.text);
+                                    JSONObject response = JSONObject.Parse(www.text);
+                                    int ResultCode = (int)response["ResultCode"].Number;
+                                    JSONObject data = response["Data"].Obj;
+                                    UserSingleton.Instance.Level = (int)data["Level"].Number;
+                                    UserSingleton.Instance.Experience = (int)data["Experience"].Number;
+                                    UserSingleton.Instance.Damage = (int)data["Damage"].Number;
+                                    UserSingleton.Instance.Health = (int)data["Health"].Number;
+                                    UserSingleton.Instance.Defence = (int)data["Defence"].Number;
+                                    UserSingleton.Instance.Speed = (int)data["Speed"].Number;
+                                    UserSingleton.Instance.DamageLevel = (int)data["DamageLevel"].Number;
+                                    UserSingleton.Instance.HealthLevel = (int)data["HealthLevel"].Number;
+                                    UserSingleton.Instance.DefenceLevel = (int)data["DefenceLevel"].Number;
+                                    UserSingleton.Instance.SpeedLevel = (int)data["SpeedLevel"].Number;
+                                    UserSingleton.Instance.Diamond = (int)data["Diamond"].Number;
+                                    UserSingleton.Instance.ExpForNextLevel = (int)data["ExpForNextLevel"].Number;
+                                    UserSingleton.Instance.ExpAfterLastLevel = (int)data["ExpAfterLastLevel"].Number;
+                                });
+        
         callback();
     }
 	

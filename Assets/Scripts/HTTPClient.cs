@@ -4,6 +4,8 @@ using UnityEngine;
 using System.Text;
 using System;
 
+using UnityEngine.Networking;
+
 public class HTTPClient : MonoBehaviour {
 	static GameObject _container;
 	static GameObject Container{
@@ -31,14 +33,16 @@ public class HTTPClient : MonoBehaviour {
 	}
 
 	public void POST(string url, string input, Action<WWW> callback){
-		Dictionary<string, string> headers = new Dictionary<string, string>();
-		headers.Add("Context-Type", "application/json");
-		byte[] body = Encoding.UTF8.GetBytes(input);
-		WWW www = new WWW(url, body, headers);
-		StartCoroutine(WaitWWW(www, callback));
-	}
 
-	public IEnumerator WaitWWW(WWW www, Action<WWW> callback)
+        Dictionary<string, string> headers = new Dictionary<string, string>();
+        headers.Add("content-Type", "application/json");
+        //input = input.Replace("'", "\"");
+        byte[] body = Encoding.UTF8.GetBytes(input);
+		WWW www = new WWW(url, body, headers);
+        StartCoroutine(WaitWWW(www, callback));
+    }
+
+    public IEnumerator WaitWWW(WWW www, Action<WWW> callback)
 	{
 		yield return www;
 		callback(www);

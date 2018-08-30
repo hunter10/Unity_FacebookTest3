@@ -335,6 +335,8 @@
     <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\HTTPClient.cs" />
     <Compile Include="Assets\Scripts\LogInController.cs" />
+    <Compile Include="Assets\Scripts\RankSingleton.cs" />
+    <Compile Include="Assets\Scripts\Singleton.cs" />
     <Compile Include="Assets\Scripts\UserSingleton.cs" />
   </ItemGroup>
   <ItemGroup>
