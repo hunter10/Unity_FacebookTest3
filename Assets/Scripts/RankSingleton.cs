@@ -92,9 +92,16 @@ public class RankSingleton : MonoBehaviour
         // 친구랭킹 API로 POST 호출을 합니다.
         HTTPClient.Instance.POST(Singleton.Instance.HOST + "/Rank/Friend", requestBody.ToString(), delegate (WWW www) {
             // 친구랭킹 조회 결과를 디버그 로그에 출력합니다.
-            Debug.Log("LoadFriendRank" + www.text);
+            Debug.Log("LoadFriendRank : " + www.text);
             // 친구랭킹 조회 결과를 
             string response = www.text;
+            if(string.IsNullOrEmpty(response))
+            {
+                Debug.Log("친구랭킹이 없네!~");
+                callback();
+                return;
+            }
+
             // 친구랭킹 응답 본문을 JSONObject로 변환합니다.
             JSONObject obj = JSONObject.Parse(response);
             // 응답 본문 Data 필드에 있는 JSONArray를 추출합니다.

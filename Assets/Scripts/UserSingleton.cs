@@ -10,6 +10,7 @@ using System;
 
  using Facebook;
  using Facebook.Unity;
+
 public class UserSingleton : MonoBehaviour {
 
 	// UserID입니다. 서버 상에서 유저를 식별하는 고유번호입니다.
@@ -80,6 +81,7 @@ public class UserSingleton : MonoBehaviour {
 		Diamond, ExpAfterLastLevel, ExpForNextLevel;
 
 	public JSONArray FriendList;
+
 	static UserSingleton _instance;
 	public static UserSingleton Instance{
 		get{
@@ -96,126 +98,171 @@ public class UserSingleton : MonoBehaviour {
 	{
 		CallFBLogin(callback);
 	}
-	 private void CallFBLogin(Action<bool, string> callback, int retryCount=0)
-	 {
+
+
+    private void CallFBLogin(Action<bool, string> callback, int retryCount=0)
+    {
 		//FB.LogInWithReadPermissions(new List<string>() { "public_profile", "user_friends" }, this.HandleResult);
-		 FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, delegate (ILoginResult result){
+		 FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, 
+             delegate (ILoginResult result){
 			
-			if(result.Error != null && retryCount >= 3){
-				Debug.LogError("Auth Error : " + result.Error);
-				callback(false, result.Error);
-				return;
-			}
+			    if(result.Error != null && retryCount >= 3){
+				    Debug.LogError("Auth Error : " + result.Error);
+				    callback(false, result.Error);
+				    return;
+			    }
 			
-			if(result.Error != null){
-				Debug.LogError("Auth Error : " + result.Error);
-				retryCount = retryCount + 1;
-				CallFBLogin(callback, retryCount);
-				return;
-			}
-			else{
-				if(FB.IsLoggedIn){
+			    if(result.Error != null){
+				    Debug.LogError("Auth Error : " + result.Error);
+				    retryCount = retryCount + 1;
+				    CallFBLogin(callback, retryCount);
+				    return;
+			    }
 
-                     Debug.Log("FB Login Result : " + result.ToString());
-					
-					 // 페이스북 로그인 결과를 JSON 파싱합니다.
-					 var aToken = Facebook.Unity.AccessToken.CurrentAccessToken; 
-                     Debug.Log(aToken.UserId);
+                 Debug.Log(result.RawResult);
 
-                     // 페이스북 기본 정보들을 UserSingleton에 저장합니다.
-                     UserSingleton.Instance.FacebookID = aToken.UserId;
-                     UserSingleton.Instance.FacebookAccessToken = aToken.TokenString;
-                     UserSingleton.Instance.FacebookID = "http://graph.facebook.com/" +
-                        UserSingleton.Instance.FacebookID + "/picture?type=square";
+                 Debug.Log("FB Login Result: " + result.RawResult);
 
-                     //Debug.Log("UserSingleton.Instance.FacebookAccessToken : " + UserSingleton.Instance.FacebookAccessToken);
-                     //Debug.Log("UserSingleton.Instance.FacebookID : " + UserSingleton.Instance.FacebookID);
-                     //Debug.Log("UserSingleton.Instance.FacebookPhotoURL : " + UserSingleton.Instance.FacebookPhotoURL);
+
+                 /*
+
+                 { "permissions":"user_friends,public_profile",
+                   "expiration_timestamp":"1541773392",
+                   "access_token":"EAAV7azYSq60BAGPPLnLKmRgALA88fXIZCtqCNH96TAZAsnJ0V9hcMZCiaDWm0KVnvPUHG5ZB6PfPWfkNMe2de8GeaBze9LsOrDKhNIye3lPEGo5Yy89Ic4lAqWSiyDqsajFFbxFBEs6ZBuOs6anfbXspZCoVbO8903i8dlY0XqRyaMaAkUVxaDEvW6flT3jZA4ZD",
+                   "user_id":"1499107166845512",
+                   "last_refresh":"1536589392",
+                   "granted_permissions":["user_friends", "public_profile"], 
+                   "declined_permissions":[],
+                   "callback_id":"2"}
+                  */
+
+                 if (FB.IsLoggedIn)
+                 {
+                     JSONObject obj = JSONObject.Parse(result.RawResult);
+                     UserSingleton.Instance.FacebookID = obj["user_id"].Str;
+                     UserSingleton.Instance.FacebookPhotoURL = "http://graph.facebook.com/" +
+                                 UserSingleton.Instance.FacebookID + "/picture?type=square";
+                     UserSingleton.Instance.FacebookAccessToken = obj["access_token"].Str;
 
                      callback(true, result.ToString());
-				} else {
-					Debug.Log("User canceled");
-				}
-			}
-		 });
-	 }
+                 }
+                 else
+                 {
+                     Debug.Log("User canceled");
+                 }
+
+                 /*
+                 else{
+                     if(FB.IsLoggedIn){
+
+                          Debug.Log("FB Login Result : " + result.ToString());
+
+                          // 페이스북 로그인 결과를 JSON 파싱합니다.
+                          var aToken = Facebook.Unity.AccessToken.CurrentAccessToken; 
+                          Debug.Log(aToken.UserId);
+
+                          // 페이스북 기본 정보들을 UserSingleton에 저장합니다.
+                          UserSingleton.Instance.FacebookID = aToken.UserId;
+                          UserSingleton.Instance.FacebookAccessToken = aToken.TokenString;
+                          UserSingleton.Instance.FacebookPhotoURL = "http://graph.facebook.com/" +
+                             UserSingleton.Instance.FacebookID + "/picture?type=square";
+
+                          //Debug.Log("UserSingleton.Instance.FacebookAccessToken : " + UserSingleton.Instance.FacebookAccessToken);
+                          //Debug.Log("UserSingleton.Instance.FacebookID : " + UserSingleton.Instance.FacebookID);
+                          //Debug.Log("UserSingleton.Instance.FacebookPhotoURL : " + UserSingleton.Instance.FacebookPhotoURL);
+
+                          callback(true, result.ToString());
+                     } else {
+                         Debug.Log("User canceled");
+                     }
+                 }
+                 */
+          });
+      }
 
 
-    public void LoadFacebookMe(Action<bool, string> callback, int retryCount=0)
-    {
-        //FB.API("/me", HttpMethod.GET, this.HandleResult);
-        FB.API("/me", HttpMethod.GET, delegate(IGraphResult result) {
+     public void LoadFacebookMe(Action<bool, string> callback, int retryCount=0)
+     {
+         //FB.API("/me", HttpMethod.GET, this.HandleResult);
+         FB.API("/me", HttpMethod.GET, delegate(IGraphResult result) {
 
-            if (result.Error != null && retryCount >= 3){
-                Debug.LogError(result.Error);
-                callback(false, result.Error);
-                return;
-            }
+             if (result.Error != null && retryCount >= 3){
+                 Debug.LogError(result.Error);
+                 callback(false, result.Error);
+                 return;
+             }
 
-            if(result.Error != null){
-                Debug.LogError("Error occured. start retrying. " + result.Error);
-                retryCount = retryCount + 1;
-                LoadFacebookMe(callback, retryCount);
-                return;
-            }
+             if(result.Error != null){
+                 Debug.LogError("Error occured. start retrying. " + result.Error);
+                 retryCount = retryCount + 1;
+                 LoadFacebookMe(callback, retryCount);
+                 return;
+             }
 
-            Debug.Log(result.RawResult);
-            JSONObject meObj = JSONObject.Parse(result.RawResult);
-            UserSingleton.Instance.Name = meObj["name"].Str;
-            callback(true, result.RawResult);
-        });
-    }
+             Debug.Log(result.RawResult);
+             JSONObject meObj = JSONObject.Parse(result.RawResult);
+             UserSingleton.Instance.Name = meObj["name"].Str;
 
-	public void LoadFacebookFriend(Action<bool, string> callback, int retryCount = 0)
-    {
-        FB.API("/me/friends", HttpMethod.GET, delegate (IGraphResult result) {
+             callback(true, result.RawResult);
+         });
+     }
 
-            if (result.Error != null && retryCount >= 3)
-            {
-                Debug.LogError(result.Error);
-                callback(false, result.Error);
-                return;
-            }
+     public void LoadFacebookFriend(Action<bool, string> callback, int retryCount = 0)
+     {
+         FB.API("/me/friends", HttpMethod.GET, delegate (IGraphResult result) {
 
-            if (result.Error != null)
-            {
-                Debug.LogError("Error occured. start retrying. " + result.Error);
-                retryCount = retryCount + 1;
-                LoadFacebookFriend(callback, retryCount);
-                return;
-            }
+             if (result.Error != null && retryCount >= 3)
+             {
+                 Debug.LogError(result.Error);
+                 callback(false, result.Error);
+                 return;
+             }
 
-            Debug.Log(result.RawResult);
-            JSONObject reponseObj = JSONObject.Parse(result.RawResult);
-            JSONArray array = reponseObj["data"].Array;
-            UserSingleton.Instance.FriendList = array;
-            callback(true, result.RawResult);
-        });
-    }
+             if (result.Error != null)
+             {
+                 Debug.LogError("Error occured. start retrying. " + result.Error);
+                 retryCount = retryCount + 1;
+                 LoadFacebookFriend(callback, retryCount);
+                 return;
+             }
 
-    public void Refresh(Action callback)
-    {
-        HTTPClient.Instance.GET(Singleton.Instance.HOST + "/User/Info?UserID=" + UserSingleton.Instance.UserID,
-                                delegate (WWW www)
-                                {
-                                    Debug.Log(www.text);
-                                    JSONObject response = JSONObject.Parse(www.text);
-                                    int ResultCode = (int)response["ResultCode"].Number;
-                                    JSONObject data = response["Data"].Obj;
-                                    UserSingleton.Instance.Level = (int)data["Level"].Number;
-                                    UserSingleton.Instance.Experience = (int)data["Experience"].Number;
-                                    UserSingleton.Instance.Damage = (int)data["Damage"].Number;
-                                    UserSingleton.Instance.Health = (int)data["Health"].Number;
-                                    UserSingleton.Instance.Defence = (int)data["Defence"].Number;
-                                    UserSingleton.Instance.Speed = (int)data["Speed"].Number;
-                                    UserSingleton.Instance.DamageLevel = (int)data["DamageLevel"].Number;
-                                    UserSingleton.Instance.HealthLevel = (int)data["HealthLevel"].Number;
-                                    UserSingleton.Instance.DefenceLevel = (int)data["DefenceLevel"].Number;
-                                    UserSingleton.Instance.SpeedLevel = (int)data["SpeedLevel"].Number;
-                                    UserSingleton.Instance.Diamond = (int)data["Diamond"].Number;
-                                    UserSingleton.Instance.ExpForNextLevel = (int)data["ExpForNextLevel"].Number;
-                                    UserSingleton.Instance.ExpAfterLastLevel = (int)data["ExpAfterLastLevel"].Number;
-                                });
+             Debug.Log(result.RawResult);
+             JSONObject reponseObj = JSONObject.Parse(result.RawResult);
+             JSONArray array = reponseObj["data"].Array;
+             UserSingleton.Instance.FriendList = array;
+             callback(true, result.RawResult);
+         });
+     }
+
+     public void Refresh(Action callback)
+     {
+         string getstr = Singleton.Instance.HOST + "/User/Info?UserID=" + UserSingleton.Instance.UserID;
+         Debug.Log("getstr : " + getstr);
+
+         HTTPClient.Instance.GET(getstr,
+                                 delegate (WWW www)
+                                 {
+                                     Debug.Log("Refresh : " + www.text);
+                                     JSONObject response = JSONObject.Parse(www.text);
+
+                                     /*
+                                     int ResultCode = (int)response["ResultCode"].Number;
+                                     JSONObject data = response["Data"].Obj;
+                                     UserSingleton.Instance.Level = (int)data["Level"].Number;
+                                     UserSingleton.Instance.Experience = (int)data["Experience"].Number;
+                                     UserSingleton.Instance.Damage = (int)data["Damage"].Number;
+                                     UserSingleton.Instance.Health = (int)data["Health"].Number;
+                                     UserSingleton.Instance.Defence = (int)data["Defence"].Number;
+                                     UserSingleton.Instance.Speed = (int)data["Speed"].Number;
+                                     UserSingleton.Instance.DamageLevel = (int)data["DamageLevel"].Number;
+                                     UserSingleton.Instance.HealthLevel = (int)data["HealthLevel"].Number;
+                                     UserSingleton.Instance.DefenceLevel = (int)data["DefenceLevel"].Number;
+                                     UserSingleton.Instance.SpeedLevel = (int)data["SpeedLevel"].Number;
+                                     UserSingleton.Instance.Diamond = (int)data["Diamond"].Number;
+                                     UserSingleton.Instance.ExpForNextLevel = (int)data["ExpForNextLevel"].Number;
+                                     UserSingleton.Instance.ExpAfterLastLevel = (int)data["ExpAfterLastLevel"].Number;
+                                     */
+             });
         
         callback();
     }

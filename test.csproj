@@ -332,11 +332,12 @@
     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\GraphRequest.cs" />
     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\MainMenu.cs" />
     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\Pay.cs" />
+    <Compile Include="Assets\Scripts\Common\Singleton.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\HTTPClient.cs" />
     <Compile Include="Assets\Scripts\LogInController.cs" />
     <Compile Include="Assets\Scripts\RankSingleton.cs" />
-    <Compile Include="Assets\Scripts\Singleton.cs" />
+    <Compile Include="Assets\Scripts\TopBarController.cs" />
     <Compile Include="Assets\Scripts\UserSingleton.cs" />
   </ItemGroup>
   <ItemGroup>

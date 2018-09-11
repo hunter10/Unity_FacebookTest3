@@ -50,8 +50,10 @@ public class LogInController : MonoBehaviour {
 			 // FB.ActivateApp()함수로 페이스북 SDK를 통해 유저가 얼마나 접속하는지 로깅합니다. 페이스북 관리자 페이지에서 유저의 접속 빈도를 확인할 수 있습니다.
 			 FB.ActivateApp();
 
-			 // 페이스북 SDK로 로그인을 수행합니다.
-			 UserSingleton.Instance.FacebookLogin(delegate (bool isSuccess, string response){				
+             // 페이스북 SDK로 로그인을 수행합니다.
+             // 유니티 에디터에서는 Access Token을 받아오는 팝업이 뜨지만
+             // 모바일에서는 잘 연동됩니다.
+             UserSingleton.Instance.FacebookLogin(delegate (bool isSuccess, string response){				
 				if(isSuccess){
 					StartCoroutine(LoadDataFromFacebook());	
 				}else {
@@ -87,6 +89,7 @@ public class LogInController : MonoBehaviour {
         body.Add("FacebookAccessToken", UserSingleton.Instance.FacebookAccessToken);
         body.Add("FacebookName", UserSingleton.Instance.Name);
         body.Add("FacebookPhotoURL", UserSingleton.Instance.FacebookPhotoURL);
+
         Debug.Log("Send To Server:" + body.ToString());
 
         HTTPClient.Instance.POST(Singleton.Instance.HOST + "/Login/Facebook", 
@@ -94,6 +97,34 @@ public class LogInController : MonoBehaviour {
                                  delegate (WWW www) 
         {
             Debug.Log("LoginGameServer ( www.text ) :" + www.text);
+
+              /*
+             :{ "Data":
+                    { "UserID":4,
+                      "FacebookID":"1499107166845512",
+                      "FacebookName":"???",
+                      "FacebookPhotoURL":"http://graph.facebook.com/1499107166845512/picture?type=square",
+                      "FacebookAccessToken":null,
+                      "Point":0,
+                      "AccessToken":"faff052f-d5a0-4df9-acf1-6817823e42b7",
+                      "CreatedAt":"2018-09-10T13:56:22",
+                      "Diamond":0,
+                      "Health":0,
+                      "Defense":0,
+                      "Damage":0,
+                      "Speed":0,
+                      "HealthLevel":0,
+                      "DefenseLevel":0,
+                      "DamageLevel":0,
+                      "SpeedLevel":0,
+                      "Level":0,
+                      "Experience":0,
+                      "ExpForNextLevel":0,
+                      "ExpAfterLastLevel":0},
+                "Message":"New User",
+                "ResultCode":2}
+                */
+
             JSONObject response = JSONObject.Parse(www.text);
 
             int ResultCode = (int)response["ResultCode"].Number;
@@ -102,7 +133,6 @@ public class LogInController : MonoBehaviour {
                 JSONObject Data = response.GetObject("Data");
                 UserSingleton.Instance.UserID = (int)Data["UserID"].Number;
                 UserSingleton.Instance.AccessToken = Data["AccessToken"].Str;
-
                 StartCoroutine(LoadDataFromGameServer());
             }
             else
@@ -130,7 +160,7 @@ public class LogInController : MonoBehaviour {
 
         while(!finished[2] || !finished[3] || !finished[4])
         {
-            yield return new WaitForSeconds(0.1f);
+            yield return null;
         }
 
         LoadNextScene();
